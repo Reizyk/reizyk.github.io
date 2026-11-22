@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reizy — Мои ссылки</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root{
+    --bg-dark:#1a0033;
+    --bg-mid:#2b0a4e;
+    --purple:#7a1fd0;
+    --purple-lt:#b48aff;
+    --hot:#e0d4ff;
+    --text:#e0d4ff;
+    --win-face:#3d2458;
+    --win-light:#6b4a8a;
+    --win-shadow:#0d0018;
+    --win-dark-edge:#1f0d33;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{ height:100%; }
+
+  body{
+    background-color:var(--bg-dark);
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 15px, rgba(122,31,208,.07) 15px 16px),
+      repeating-linear-gradient(90deg, transparent 0 15px, rgba(122,31,208,.07) 15px 16px),
+      radial-gradient(circle at 50% 20%, #34105e 0%, #1a0033 60%, #0d0018 100%);
+    font-family:'Press Start 2P', 'MS Sans Serif', cursive;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:16px;
+    image-rendering:pixelated;
+  }
+
+  /* ---------- fake CRT scanlines ---------- */
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px);
+    pointer-events:none;
+    z-index:999;
+  }
+
+  /* ---------- window (Win9x/2000 style) ---------- */
+  .window{
+    width:100%; max-width:520px;
+    background:var(--win-face);
+    border:2px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    box-shadow:0 0 0 1px var(--win-dark-edge), 8px 8px 0 rgba(0,0,0,.45), 0 0 40px rgba(122,31,208,.35);
+    padding:3px;
+  }
+
+  .titlebar{
+    background:linear-gradient(90deg, #2b0a4e 0%, var(--purple) 55%, #4b1480 100%);
+    color:#fff;
+    font-size:10px;
+    padding:5px 6px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    user-select:none;
+  }
+  .titlebar .icon{ width:14px; height:14px; flex:0 0 auto; }
+  .titlebar .title{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:1px; }
+
+  .tb-btns{ display:flex; gap:3px; }
+  .tb-btn{
+    width:18px; height:16px;
+    background:var(--win-face);
+    border:1px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    color:var(--text);
+    font-family:inherit; font-size:8px;
+    line-height:1;
+    cursor:default;
+  }
+
+  .content{ padding:14px 12px 12px; }
+
+  h1{
+    font-size:14px;
+    text-align:center;
+    color:var(--purple-lt);
+    text-shadow:2px 2px 0 var(--win-shadow), 0 0 12px rgba(180,138,255,.6);
+    margin:8px 0 4px;
+    line-height:1.6;
+  }
+  .subtitle{
+    text-align:center;
+    font-size:8px;
+    color:var(--hot);
+    margin-bottom:14px;
+    line-height:1.8;
+  }
+
+  /* ---------- links as Win buttons ---------- */
+  .links{ display:flex; flex-direction:column; gap:8px; }
+  a.link{
+    display:flex; align-items:center; gap:10px;
+    background:var(--win-face);
+    border:2px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    padding:11px 12px;
+    color:var(--text);
+    text-decoration:none;
+    font-size:10px;
+    letter-spacing:1px;
+    line-height:1.6;
+  }
+  a.link .glyph{
+    width:16px; height:16px; flex:0 0 auto;
+    font-size:14px; text-align:center; line-height:16px;
+    color:var(--purple-lt);
+  }
+  a.link .name{ flex:1; }
+  a.link .arrow{ color:var(--purple-lt); font-size:8px; }
+  a.link:hover{
+    background:#4b2a6b;
+    color:#fff;
+    box-shadow:0 0 14px rgba(122,31,208,.6);
+  }
+  a.link:active{
+    border-color:var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+    padding:12px 11px 10px 13px;
+  }
+  a.link.placeholder{ opacity:.55; }
+
+  /* ---------- status bar ---------- */
+  .statusbar{
+    margin-top:12px;
+    border:2px solid;
+    border-color:var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+    background:#241040;
+    font-size:8px;
+    padding:4px 6px;
+    display:flex;
+    gap:8px;
+    color:#a98ad0;
+  }
+  .statusbar .cell{ flex:1; }
+  .statusbar .cell.counter{ flex:0 0 auto; }
+
+  .cursor{ animation:blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ---------- start taskbar ---------- */
+  .taskbar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:var(--win-face);
+    border-top:2px solid var(--win-light);
+    padding:3px 4px;
+    display:flex; align-items:center; gap:6px;
+    font-size:9px;
+    z-index:998;
+    user-select:none;
+  }
+  .start{
+    background:var(--win-face);
+    border:2px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    padding:4px 8px;
+    color:var(--text);
+    cursor:default;
+  }
+  .start:active{
+    border-color:var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+  }
+  .clock{
+    margin-left:auto;
+    border:2px solid;
+    border-color:var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+    padding:4px 8px;
+    color:#a98ad0;
+  }
+  body{ padding-bottom:44px; }
+
+  /* ---------- popup menu ---------- */
+  .menu{
+    position:fixed; bottom:34px; left:4px;
+    background:var(--win-face);
+    border:2px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    padding:2px;
+    display:none;
+    z-index:997;
+    min-width:170px;
+  }
+  .menu.open{ display:block; }
+  .menu div{
+    padding:7px 10px;
+    font-size:9px;
+    cursor:pointer;
+  }
+  .menu div:hover{ background:var(--purple); color:#fff; }
+
+  /* ---------- clock is clickable ---------- */
+  .clock{ cursor:pointer; }
+  .clock:hover{ color:#fff; }
+
+  /* ---------- "Свойства: Дата и время" ---------- */
+  .dt-panel{
+    position:fixed; right:4px; bottom:40px; z-index:997;
+    width:260px;
+    background:var(--win-face);
+    border:2px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    box-shadow:4px 4px 0 rgba(0,0,0,.45);
+    padding:3px;
+    display:none;
+  }
+  .dt-panel.open{ display:block; }
+  .dt-body{ padding:10px 8px 12px; font-size:8px; line-height:1.8; }
+  .dt-group{ font-size:9px; color:var(--text); }
+  .dt-face{
+    background:#10051f;
+    border:2px solid;
+    border-color:var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+    text-align:center;
+    padding:10px 0 9px;
+    margin:6px 0 12px;
+  }
+  .dt-time{ font-size:16px; color:var(--purple-lt); text-shadow:2px 2px 0 var(--win-shadow); }
+  .dt-date{ margin-top:7px; color:#a98ad0; }
+  .dt-val{ margin-top:4px; margin-bottom:2px; color:#a98ad0; }
+  .dt-ok{
+    display:block; margin:14px auto 0;
+    background:var(--win-face);
+    border:2px solid;
+    border-color:var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+    padding:5px 22px;
+    font-family:inherit; font-size:8px;
+    color:var(--text);
+    cursor:default;
+  }
+  .dt-ok:active{ border-color:var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow); }
+
+  /* ---------- курсор: классическая стрелка Windows ---------- */
+  html, body, a, .link, .menu div, .tb-btn, .clock, .dt-ok, .titlebar, .taskbar{
+    cursor:var(--dcur, default);
+  }
+</style>
+</head>
+<body>
+
+  <div class="window">
+    <div class="titlebar">
+      <svg class="icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="14" height="14" fill="#7a1fd0"/>
+        <rect x="3" y="3" width="10" height="10" fill="#1a0033"/>
+        <rect x="5" y="5" width="6" height="6" fill="#b48aff"/>
+        <rect x="7" y="7" width="2" height="2" fill="#7a1fd0"/>
+      </svg>
+      <span class="title">Reizy — C:\LINKS\</span>
+      <div class="tb-btns">
+        <div class="tb-btn">_</div>
+        <div class="tb-btn">□</div>
+        <div class="tb-btn">×</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <h1>✦ REIZY ✦</h1>
+      <p class="subtitle">нажмите any key… но any key нигде нет<br>est. 67<span class="cursor">_</span></p>
+
+      <div class="links" id="links"></div>
+
+      <div class="statusbar">
+        <div class="cell">Для запуска нажмите на ссылку</div>
+        <div class="cell counter">👁 <span id="hits">0</span> хитов</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="taskbar">
+    <div class="start" id="startBtn">🖥 Пуск</div>
+    <div class="clock" id="clock">--:--</div>
+  </div>
+
+  <div class="menu" id="menu">
+    <div onclick="location.reload()">Перезагрузить</div>
+    <div onclick="alert('Нигде в интернете!')">Обнаружить в инете</div>
+    <div onclick="alert('Память: 640K хватит всем')">Помощь</div>
+    <hr style="border:none;border-top:1px solid var(--win-shadow);border-bottom:1px solid var(--win-light);margin:4px 2px">
+    <div id="sndItem">Звук: ВКЛ ♪</div>
+  </div>
+
+  <div class="dt-panel" id="dtProp">
+    <div class="titlebar">
+      <svg class="icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="12" height="12" fill="#b48aff"/>
+        <rect x="4" y="4" width="8" height="8" fill="#1a0033"/>
+        <rect x="7" y="1" width="2" height="3" fill="#fff"/>
+        <rect x="12" y="7" width="3" height="2" fill="#fff"/>
+      </svg>
+      <span class="title">Свойства: Дата и время</span>
+      <div class="tb-btns"><div class="tb-btn">×</div></div>
+    </div>
+    <div class="dt-body">
+      <div class="dt-group">Ваше локальное время</div>
+      <div class="dt-face">
+        <div class="dt-time" id="dtTime">--:--:--</div>
+        <div class="dt-date" id="dtDate">—</div>
+      </div>
+      <div class="dt-group">Часовой пояс</div>
+      <div class="dt-val" id="dtZone">—</div>
+      <button class="dt-ok" type="button">ОК</button>
+    </div>
+  </div>
+
+<script>
+// ===== ССЫЛКИ: меняй только этот список =====
+// [название, glyph-эмодзи, url] — url '' = заглушка
+const LINKS = [
+  ["Telegram",   "✈",  "https://t.me/reizytg"],
+  ["YouTube",    "▶",  "https://www.youtube.com/@reizy67"],
+  ["Twitch",     "🎮", "https://www.twitch.tv/reizy67"],
+  ["Steam",      "🕹", "https://steamcommunity.com/id/Reizyk/"],
+  ["GitHub",     "🐙", "https://github.com/Reizyk"],
+  //["Fetta",      "🍇", "https://fetta.app/u/Reizy"],
+  ["Donatex",    "💰", "https://donatex.gg/donate/reizy"],
+];
+// ============================================
+
+const box = document.getElementById("links");
+for (const [name, glyph, url] of LINKS) {
+  const a = document.createElement("a");
+  a.className = "link" + (url ? "" : " placeholder");
+  a.innerHTML = '<span class="glyph">' + glyph + '</span>' +
+                '<span class="name">' + name + '</span>' +
+                '<span class="arrow">' + (url ? "►" : "—") + '</span>';
+  if (url) { a.href = url; a.target = "_blank"; a.rel = "noopener"; }
+  else { a.href = "#"; a.onclick = () => { alert(name + ": ссылка не настроена"); return false; }; }
+  box.appendChild(a);
+}
+
+// счётчик "хитов" из localStorage (2000s style)
+let hits = parseInt(localStorage.getItem("hits") || "0", 10) + 1;
+localStorage.setItem("hits", hits);
+document.getElementById("hits").textContent = hits;
+
+// часы в трее — время гостя, тикают каждую секунду
+const WD = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+const MON = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const p = n => String(n).padStart(2, "0");
+function zoneLabel(d){
+  const off = -d.getTimezoneOffset();
+  const sign = off < 0 ? "-" : "+";
+  const abs = Math.abs(off);
+  let s = "UTC" + sign + Math.floor(abs / 60);
+  if (abs % 60) s += ":" + p(abs % 60);
+  try { s += " · " + Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+  return s;
+}
+const clockEl = document.getElementById("clock");
+const dt = document.getElementById("dtProp");
+function tick(){
+  const d = new Date();
+  const t = p(d.getHours()) + ":" + p(d.getMinutes());
+  clockEl.textContent = t;
+  clockEl.title = WD[d.getDay()] + ", " + d.getDate() + " " + MON[d.getMonth()] + " " + d.getFullYear() + " г. · " + t + ":" + p(d.getSeconds());
+  if (dt.classList.contains("open")) {
+    document.getElementById("dtTime").textContent = t + ":" + p(d.getSeconds());
+    document.getElementById("dtDate").textContent = WD[d.getDay()] + ", " + d.getDate() + " " + MON[d.getMonth()] + " " + d.getFullYear() + " г.";
+    document.getElementById("dtZone").textContent = zoneLabel(d);
+  }
+}
+tick(); setInterval(tick, 1000);
+
+// окно "Свойства: Дата и время" — по клику на часы, как в Windows 2000
+clockEl.onclick = e => { e.stopPropagation(); dt.classList.toggle("open"); };
+dt.addEventListener("click", e => e.stopPropagation());
+const dtClose = () => dt.classList.remove("open");
+document.querySelector(".dt-ok").onclick = dtClose;
+dt.querySelector(".tb-btn").onclick = dtClose;
+
+// меню "Пуск"
+const menu = document.getElementById("menu");
+document.getElementById("startBtn").onclick = e => { e.stopPropagation(); menu.classList.toggle("open"); };
+document.addEventListener("click", () => menu.classList.remove("open"));
+document.addEventListener("keydown", e => { if (e.key === "Escape") { menu.classList.remove("open"); dtClose(); } });
+
+// звук: джойстик-триггер (mp3 встроен base64 — файлов на хостинге нет)
+let sndOn = localStorage.getItem("snd") !== "off";
+const SND_MP3 = "data:audio/mpeg;base64,SUQzAwAAAABEVFRZRVIAAAAGAAAAMjAxNABUREFUAAAABgAAADEwMDMAVElNRQAAAAYAAAAxNjE1AFRQRTQAAAALAAAAUmljIFZpZXJzAFBSSVYAABoFAABYTVAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS41LWMwMjEgNzkuMTU1MjQxLCAyMDEzLzExLzI1LTIxOjEwOjQwICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iCiAgICB4bWxuczpzdEV2dD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlRXZlbnQjIgogICAgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiCiAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICB4bWxuczp4bXBETT0iaHR0cDovL25zLmFkb2JlLmNvbS94bXAvMS4wL0R5bmFtaWNNZWRpYS8iCiAgICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgICB4bWxuczpiZXh0PSJodHRwOi8vbnMuYWRvYmUuY29tL2J3Zi9iZXh0LzEuMC8iCiAgIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OTYyOGM2ZDUtZGNhMS00YTdjLWJhMjAtMzRjNjZkNGFiNjI4IgogICB4bXBNTTpEb2N1bWVudElEPSIxYzdjMzc3ZS0wMTkyLTY1NDktYmVhYi1hNmQyMDAwMDAwNDkiCiAgIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo3ZmNiNmRiOS1kMGU3LTQ5MmEtODhkNi04MDY3ZmFiYzRkMjMiCiAgIHhtcDpNZXRhZGF0YURhdGU9IjIwMTQtMDMtMTBUMTY6MTU6MzItMDQ6MDAiCiAgIHhtcDpNb2RpZnlEYXRlPSIyMDE0LTAzLTEwVDE2OjE1OjMyLTA0OjAwIgogICB4bXA6Q3JlYXRlRGF0ZT0iMjAxNC0wMy0xMFQxNjoxNTowMi0wNDowMCIKICAgeG1wOkNyZWF0b3JUb29sPSJTb255IFNvdW5kIEZvcmdlIDguMDtTb3VuZCBGb3JnZSBQcm8gMTAuMCIKICAgeG1wRE06ZW5naW5lZXI9IlJpYyBWaWVycyIKICAgeG1wRE06YXVkaW9TYW1wbGVSYXRlPSI0NDEwMCIKICAgeG1wRE06YXVkaW9TYW1wbGVUeXBlPSIxNkludCIKICAgeG1wRE06YXVkaW9DaGFubmVsVHlwZT0iU3RlcmVvIgogICB4bXBETTpzdGFydFRpbWVTY2FsZT0iMzAwMDAiCiAgIHhtcERNOnN0YXJ0VGltZVNhbXBsZVNpemU9IjEwMDEiCiAgIGRjOmZvcm1hdD0iTVAzIgogICBiZXh0Om9yaWdpbmF0b3I9IkFkb2JlIFN5c3RlbXMgSW5jIgogICBiZXh0Om9yaWdpbmF0aW9uRGF0ZT0iMjAxNC0wMy0wNiIKICAgYmV4dDpvcmlnaW5hdGlvblRpbWU9IjEyOjMzOjM3IgogICBiZXh0OnRpbWVSZWZlcmVuY2U9IjAiCiAgIGJleHQ6dmVyc2lvbj0iMSI+CiAgIDx4bXBNTTpIaXN0b3J5PgogICAgPHJkZjpTZXE+CiAgICAgPHJkZjpsaQogICAgICBzdEV2dDphY3Rpb249InNhdmVkIgogICAgICBzdEV2dDppbnN0YW5jZUlEPSI0ZGU2YjI3Yi02MTFhLTc4MGMtMTc0Mi1hNWIyMDAwMDAwNzYiCiAgICAgIHN0RXZ0OndoZW49IjIwMTQtMDMtMTBUMTY6MTU6MzItMDQ6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEFkb2JlIE1lZGlhIEVuY29kZXIgQ0MgKE1hY2ludG9zaCkiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiCiAgICAgIHN0RXZ0Omluc3RhbmNlSUQ9IjA3NTkwZWQwLTAyNDktYzZhMi05MTQ5LThlMjUwMDAwMDA3NiIKICAgICAgc3RFdnQ6d2hlbj0iMjAxNC0wMy0wNlQxMjozMzozNy0wNTowMCIKICAgICAgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgQWRvYmUgTWVkaWEgRW5jb2RlciBDQyAoTWFjaW50b3NoKSIKICAgICAgc3RFdnQ6Y2hhbmdlZD0iLyIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDpCNzcyRkVCNDA3MjA2ODExOEMxNEM5MTBBNDYyODdCRiIKICAgICAgc3RFdnQ6d2hlbj0iMjAxMy0wNC0zMFQwOTo1MjoyOS0wNDowMCIKICAgICAgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgQWRvYmUgTWVkaWEgRW5jb2RlciBDUzYgKE1hY2ludG9zaCkiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiCiAgICAgIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6QkE3MkZFQjQwNzIwNjgxMThDMTRDOTEwQTQ2Mjg3QkYiCiAgICAgIHN0RXZ0OndoZW49IjIwMTMtMDQtMzBUMDk6NTI6MzAtMDQ6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEFkb2JlIE1lZGlhIEVuY29kZXIgQ1M2IChNYWNpbnRvc2gpIgogICAgICBzdEV2dDpjaGFuZ2VkPSIvbWV0YWRhdGEiLz4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiCiAgICAgIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6RUM2NzQyQUQxNzIwNjgxMTg3MUZDOTRFNTE2NzZBMkUiCiAgICAgIHN0RXZ0OndoZW49IjIwMTMtMDUtMDFUMTM6NDg6NDgtMDQ6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEFkb2JlIE1lZGlhIEVuY29kZXIgNS41LjAiLz4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0ibW9kaWZpZWQiCiAgICAgIHN0RXZ0OnBhcmFtZXRlcnM9InVua25vd24gbW9kaWZpY2F0aW9ucyIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0iOGU5NGJjYzQtODdiMC1hOGYxLTA2MTktY2M2NDAwMDAwMDc2IgogICAgICBzdEV2dDp3aGVuPSIyMDE0LTAzLTA2VDExOjAzOjM5LTA1OjAwIgogICAgICBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBBZG9iZSBNZWRpYSBFbmNvZGVyIENDIChNYWNpbnRvc2gpIgogICAgICBzdEV2dDpjaGFuZ2VkPSIvIi8+CiAgICAgPHJkZjpsaQogICAgICBzdEV2dDphY3Rpb249InNhdmVkIgogICAgICBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmI5MTQyZGZkLWI0M2UtNGU2OC05NTQzLWYxZmY0MTdlYzlmNCIKICAgICAgc3RFdnQ6d2hlbj0iMjAxNC0wMy0wNlQxMjozMzozNy0wNTowMCIKICAgICAgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgQWRvYmUgTWVkaWEgRW5jb2RlciBDQyAoTWFjaW50b3NoKSIKICAgICAgc3RFdnQ6Y2hhbmdlZD0iLyIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo1ZTlkMWYzMS1hNWI3LTQ4YTYtOTlkYy1iZjliZTA2MDM4MDMiCiAgICAgIHN0RXZ0OndoZW49IjIwMTQtMDMtMDZUMTI6MzM6MzctMDU6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEFkb2JlIE1lZGlhIEVuY29kZXIgQ0MgKE1hY2ludG9zaCkiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii9tZXRhZGF0YSIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo2ZjZmNTcwZS00ZTZhLTRhMGYtYjA1MS04MThiM2NmYzY1ZjUiCiAgICAgIHN0RXZ0OndoZW49IjIwMTQtMDMtMTBUMTY6MTU6MzItMDQ6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEFkb2JlIE1lZGlhIEVuY29kZXIgQ0MgKE1hY2ludG9zaCkiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiCiAgICAgIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6OTYyOGM2ZDUtZGNhMS00YTdjLWJhMjAtMzRjNjZkNGFiNjI4IgogICAgICBzdEV2dDp3aGVuPSIyMDE0LTAzLTEwVDE2OjE1OjMyLTA0OjAwIgogICAgICBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBBZG9iZSBNZWRpYSBFbmNvZGVyIENDIChNYWNpbnRvc2gpIgogICAgICBzdEV2dDpjaGFuZ2VkPSIvbWV0YWRhdGEiLz4KICAgIDwvcmRmOlNlcT4KICAgPC94bXBNTTpIaXN0b3J5PgogICA8eG1wTU06RGVyaXZlZEZyb20KICAgIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NWU5ZDFmMzEtYTViNy00OGE2LTk5ZGMtYmY5YmUwNjAzODAzIgogICAgc3RSZWY6ZG9jdW1lbnRJRD0iOTYwNTcxMGMtNzE5NS1mODY2LWFhODctZDdlNDAwMDAwMDQ5IgogICAgc3RSZWY6b3JpZ2luYWxEb2N1bWVudElEPSJ4bXAuZGlkOjAyYTZhYmQ0LTM0NzYtNGRhOC05MGY5LWZmYzZiMzhhYjY0MiIvPgogICA8eG1wRE06c3RhcnRUaW1lY29kZQogICAgeG1wRE06dGltZUZvcm1hdD0iMjk5N0Ryb3BUaW1lY29kZSIKICAgIHhtcERNOnRpbWVWYWx1ZT0iMDA7MDA7MDA7MDAiLz4KICAgPHhtcERNOmFsdFRpbWVjb2RlCiAgICB4bXBETTp0aW1lVmFsdWU9IjAwOzAwOzAwOzAwIgogICAgeG1wRE06dGltZUZvcm1hdD0iMjk5N0Ryb3BUaW1lY29kZSIvPgogICA8eG1wRE06ZHVyYXRpb24KICAgIHhtcERNOnZhbHVlPSIxMiIKICAgIHhtcERNOnNjYWxlPSIxMDAxLzMwMDAwIi8+CiAgPC9yZGY6RGVzY3JpcHRpb24+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgCjw/eHBhY2tldCBlbmQ9InciPz4AVElUMgAAABsAAAH//kYARgBfADIARgBYADIAMAAxADUANgAAAFRCUE0AAAARAAAB//4xADEAOAAuADMANgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/+3BgAAAC1zJCYwVK0g6gp8gAAxIPgSFM1MYACAAAJcKAAASNS2yRX3+gcUMmX8brFrNHSUlSkug4cER5GIz6KZm3uTafUVPigbNCcgVac2om9usvc+b83Nhe5m5OFyi9uF//3rcMvYTScgn/4yT0lWE7kciOBGFqBlWev+lIAYEAgQD8MF///LlFqGDe+t/ehYL4JiOZn8BIBoI5/ZYYOdix9tevve8sGb7Dl373f7FjjZnHSi+MkFgrk8uACAcQSQDQGhMSiWj4cB0K4N1ZweQvtvydqzg8Tn9V7+dfFjlO/KUpRz6dN7+w580WOUpTjg8TmdnKOQkx0/aWa+vXwmdqTmv4WM6/ADdmI3ZXU4REEWCUSTCYiAASmVDAg0HmphgaJaFQlJ1hEKTwrLHR0hE9khwc2gSy//twYBeAA7tMXn4lJAIAAAlwwAAADCT/Y/iTgEAAACXDAAAAKpmYYFDAq6waj/nf55slkV5u/+kCIEDABBxKMBFy3z//ozyPt1jXy7jL5n2qvd+whmVD3FZpDVq7/tZn/70DBAYmxP75Ui43ZkRMjuossOwkSmKRJLBsAABcHqBBUHtDQaJAgJzCwVZCQERaDkcHQJiIeAeCg+aDkXkmOCwaxUSsKjqmrQ/V3epzqag8b6G1u4+pAbZJd+uvosTCUcxH9GX7pjplZ3YudpAttqSSy2yOICzqFliWku0KcTFOwWW2WVjaxUuRkiAStNdDtLQ9x0oDwAaxxyD0OaHWoZVclVlsmg6FiRgdG1IrAfHfbjCx3BI6lqYlV/dZ67+mZuJuBa2OzSWFhYWOFrJFRa4uPUr5ENImN//7cGA1gAM8SNHvPQAIAAAJcOAAAQyVAzGHvQuoAAAlwAAABCf8qAvYyuUZ/olxJKsE4FqZU8ojmdwQ+V7JyqmEplrMSNt4sxcbs3wdQI+LqmJhmHtSvUVnHWUe0vFKrHhGMPkc1LET7NPxf/HP3tzSW1d81S6q2XMQzMUmDd8Tu3I7/dMAF12320skaRCLj+QGomh/KFDE1jgULoDVEFmRj9RrQCqSl88hLlDTyzAZKnRDv3x2mkSDMuZmpS8sdfvaioirKz7PppqHDcnpPbh1sO/+qpQO1kOP7f9EYzWLEF4xaU10qol0v0UH7b7/eWWNIBAsWatEEJGCvKsINTFpqsTDoXao2/OsDmBSq3xKLpLTsKHtxkiitT4vm7Ww23drrF70Yv3VMzh7Q5T4kgQBDEcFYfhVWEf/+3BgWYADKyjL6w9KWgAACXAAAAEN8SErrD0LoAAAJcAAAAQREobtC8J/7XdxfxfUdcRxosVuOWohodlMtaRJbqqJ7CQuP3+vt0jjaQAFO7QKGYBoCygwgABTpUJ1MW5fyyiVgCPmP/uErwzsw9HncZt+VzCVZZ0tNd3hc/6q/2dOagQbdvUN2QMR2uVl716c6nVLb9Zx2+obsh9q3S1XLzWm03XuJPNY9SHV2yLhz3KMUvNLqhGqZbZLJG2420AhqC4Oeoe09N1vmvuK38srPQc8SAAh9y7uOooUgtgWwfSdc6WOh7MtzTfOyr3Y0e1cvl2IQXg8RmpTHcZNROt+9DB3EzZlk2c3FtJc7Wm6/XrKzMPXTS7FilohQgwPZ0AbbS22yyWWsDBi7QMKh3AQVG3KX44br2fy//twYHmAA49GSmsYWuoAAAlwAAABDPEbI6wxC4gAACXAAAAElNm9QernEfTzuV65g8qVTa+abrbyxojI6aqVpSf136w2Kjav3UTtImshLIhZ+68o7nrZhK9/poONIFlIwbfLvMTHWURykmx8wiY5IGIGauiBSDsHe3++G/a0xfttrdLI2kQpkRRCHRlNeKNMg2bfp/bc3L66uAPCNWGbWvTiiXgImlb0lq5MI5OiJB9hB7dWxexX/k2zMo7NTniik4CZajzad4grchkJyWy8mrKcI3sElanZ7IVaqlW42pbjELWm2+irc1liTW5H2pqTehkv33LvthAAFnh5eHdtrZGyB1MTT0LLOBSqgGgtAgg6YAWGGZ1YZ/gPtUwFw4rCoYGDeoSkiQFOr2tPuZwGWxq1HmoxLT55Cv/7cGCXAAOaTcnrDzNgAAAJcAAAAQ89MymsMS2oAAAlwAAABF14f+95NLHW6Cow1s8dlnQKbrIsPR5Gpdm3n9Xn0PZVEpeIBZsTR8TvnrITmKQIFUbGw840TKNQ8XFzCttRg5AHHHHJJJbJED9G2jU8zqk/z/F0BpJIpWU5TTXRKFkhBoNA5zrXBcFQf4/EiS9LDcJoX8cZ8C5nMMRXkHTw+B0C3hGCzEPQ40EYn2d5HYkMbSVo8vhcJS+Fgemmda6LZEY1AxueInf2gX3Sr+7Y8pqn3m2sU36V9PTGNSx4EDMfG70iY+teX69d399zWy0Wrv4+oGlaqTbrkQLPhD3WjLl2OTTvzDvzEJfeal8jitqcxnYIty+lmY7ZnJFTSmQ00aoGYKpuOwx/2zt6+Twu7TQ9aiM3HqT/+3BgqoAEAUjLew9DagAACXAAAAESLRMvp73riAAAJcAAAASazp707FpVO0NNOQXBjHAUckALFLtiMaOyWBaNRpXqm8GTms6eUTtqUVb9+MWc+W7nL7vt0e134AnbdJQyaN5wBZjde3MUcsrzVFK60pd9623fSQv/aiEORN+MKsPySKQ3apM0keAj4UykScjWk2nHI5JLJQAWxvQ14hUNRpoFiTdDgGtD2dLtyOYodi72XpU+2uRN/a0cmnUZjbiC5FqS1z465KP5bxaao1L5qKX5udk1LUqnJBoQHBXsgni8Buv124szmxEXZpHyDjkpTOFfwFKkPDj34y+7lLIZnZbS5Tkw0lIsvWvd2IMcS1Qz8v1XilPq3T1eY2qCteTPXgjgt5YS8gAWaoPI908Tnocnr1ui+cpa//twYKwABVVIz1VjAAIAAAlwoAABF8U7V7j8AAAAACXDAAAAuNWx+GPfVYw9l8RceR1Y3KwRASclcmgqkTROKVWu2XgBi12BPhPjA4egmipY+7L+7hmkgFiLCuVK8UzZpVHJBskpsr43jKDaqpTdcfVc1IIBpEqHcLkxJ+LLGtBz+i7LY3TtJbbxYvhV+7awJrRyevnxzM0rjW19Z/3/xyi4si5VBBkUQpVUzX5reuvv//P6KVTXttP23e//fxfVZkXRCLurO8PD7/WyMDylLWaLIZA1Hi2EujyCHFBnXg66rdCptbcdsgZxY5G03nC9cOWJ6rqZ9tSkhERJsnEmxK6A0tgNoWI6mI0VLV7HissW+8bvGjxIz2K+zSE7ib+s7iyZ1G+dbi0vi1s6nxjfxqm4lJU4ElCewf/7cGCCAAR1SNR+YeAAAAAJcMAAAA/k3zf9h4AoAAAlw4AABAnYp2ryma+hnuwHh3h3dmutjbIKEvu1gYYg4gBU6FqCTgd9HBQIKWV50fCs3VuGLKLmnnsvExsy/ZcwrYHJemKlC6iLIVNU6hdjhCQhR5cipxt0e0l7XtE88xcXa/3ykdiHF8XELVDUPp5RXdYHHl0kU8K9jZOojm+s9IDPDszMyyWxpAAkTzAAc+ttcyYgGOUAaXegQlIoorEJiOlmyy9esjm5DswrGIzT157Cc4wUCgKBAehghQYah4Kwbi7jxQw1aExqMIYuNV56hCI3fGTjIhPTurm3U8lKRkohFu7m2ZaSni33vyGpN1ASSxtN1/UAiKxROARjUKZgh0aKo+JbXY/oWBZQsaI5PNHq5joQc1VPf8r/+3BghYADi0VLewxC6gAACXAAAAEN6SEr7CULoAAAJcAAAATdx8p3IowW1CSIS9TMv4mZNQmJg5KqzKZ+XOZ+zeO/+vNvvRwkA+i1KmC90KMDSF6sGre7/0bbLIm+qqRNsMKLRGAqNLFFnHia78lQ6iZuJVEI7ySQspF4tZ98vdZvv/118/t9uf3i7Uv9r1bWu6/rn1xN5bM1J0ZUFf9+ct+hrYByNpIk34oCAptwWq3daAmiQqP6O5Co5ZOMTaxvwyRRWtxFQ+UWhBDpWSbyo0weqrfzzWxO+KHQF////////////////////////////////////////////////////////////////////////////////////////////////////////////bY200iqqQGkEjF9//twYJ+AAvs1x+MIMtIAAAlwAAABCVgnIYw9JIgAACXAAAAEVHlg3bBRcu6IC3USwmm4J9G2rTi6tIt3G+GBPsptcyuQmVvEAd5WERm7SFG0UiTXgWMrEogsMEQHKASrJIZwTKjEMW4cPH/6W/19un6PrcbrOxCfvsTfq//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7cGDUgARFCUdbCRkgAAAJcAAAAQbAJyGMGESAAAAlwAAABP/////9RpJFEiYWnKEpeKfCoMSkMwkUC0LmXdn/4B///6at4rrW6k071gENpEkgDg0s16N+I0qGSCEEAyRKmAD9P//////9Y/Ur////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+3Bg/4AHdgdHWwkQoAAACXAAAAEEyBUdbCRCQAAAJcAAAAT///////////////////////////////422iCQDYBHk0WxfVYDyCEQRbuoSIIAAAWst8VACCeeLncr//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////twYP+ACA4FRqMPMJAAAAlwAAABAmgVHIe8wmAAACXAAAAE/////////////////////////////////////+UUQAAAEsJ08XLEgqhJu0mkCSAE6K1fwWRCgfcl8h/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7cGD/gAgzA0YjCTgIAAAJcAAAAQHUExiHmEJoAAAlwAAABP///////////////////////////////////////+2kQAAAG2ykGShILGhokgAADilzggJeRT//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+3Bg/4AIQwPHIiwQGAAACXAAAAEBiA8ah7BAaAAAJcAAAAT///////////////////////////////////////////////2QQAAAAwaE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////twYP+ACG4CRqMCAAoAAAlwAAABAOQHGoSEACAAACXAAAAE///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7cED/gAioAEuAAAAIAAAJcAAAAQAAAS4AAAAgAAAlwAAABP////////////////////////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/+3BA/4AIqABLgAAACAAACXAAAAEAAAEuAAAAIAAAJcAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAxNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+function clack(){
+  if (!sndOn) return;
+  try {
+    const a = new Audio(SND_MP3);
+    a.volume = 0.5;
+    a.play().catch(function(){});
+  } catch (e) {}
+}
+document.addEventListener("pointerdown", clack);
+const sndItem = document.getElementById("sndItem");
+function paintSnd(){ sndItem.textContent = "Звук: " + (sndOn ? "ВКЛ ♪" : "ВЫКЛ"); }
+sndItem.onclick = e => {
+  e.stopPropagation();
+  sndOn = !sndOn;
+  localStorage.setItem("snd", sndOn ? "on" : "off");
+  paintSnd(); clack();
+};
+paintSnd();
+
+// курсор как на старой Windows: белая стрелка с чёрной рамкой, кончик острия = точка клика
+const ARROW = [
+"o...............",
+"oo..............",
+"owo.............",
+"owwo............",
+"owwwo...........",
+"owwwwo..........",
+"owwwwwo.........",
+"owwwwwwo........",
+"owwwwwwwo.......",
+"owwwwwwwwo......",
+"owwwwwwwwwo.....",
+"owwwwoooooooo...",
+"owwwooo.........",
+"owwo.oo.........",
+"owwwoo..........",
+"ooooo..........."
+];
+const COL = { o:"#000000", w:"#ffffff" };
+let arows = "";
+ARROW.forEach((row, y) => {
+  for (let x = 0; x < 16; x++) {
+    const c = row[x];
+    if (c !== "." && COL[c]) arows += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + COL[c] + '"/>';
+  }
+});
+const asvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges">' + arows + '</svg>';
+document.documentElement.style.setProperty("--dcur", 'url("data:image/svg+xml,' + encodeURIComponent(asvg) + '") 0 0, auto');
+</script>
+</body>
+</html>
